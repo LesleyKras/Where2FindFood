@@ -2,10 +2,12 @@ package com.example.lesleykras.where2findfood;
 
 
 import android.os.AsyncTask;
+import android.util.Log;
 
-import java.io.BufferedReader;
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -33,33 +35,25 @@ public class HttpGetRequest extends AsyncTask <String, Void, String>{
             connection.setReadTimeout(READ_TIMEOUT);
             connection.setRequestMethod(REQUEST_METHOD);
             connection.setDoInput(true);
+            connection.setInstanceFollowRedirects(true);
+            HttpURLConnection.setFollowRedirects(true);
 
             //Open connection
             connection.connect();
 
             //Retrieve and parse data
-            InputStreamReader streamReader = new InputStreamReader(connection.getInputStream());
-
-            BufferedReader reader = new BufferedReader(streamReader);
-            StringBuilder stringBuilder = new StringBuilder();
-
-            String data;
-
-            while ((data = reader.readLine()) != null){
-                stringBuilder.append(data);
+            InputStream inputStream = connection.getInputStream();
+            byte[] bytes = IOUtils.toByteArray(inputStream);
+            if (bytes.length == 0) {
+                // TODO: Foutafhandeling
+                Log.d("=-LOG-=", "No data received");
             }
-
-            //Close connections
-            reader.close();
-            streamReader.close();
-
-            result = stringBuilder.toString();
-
+            // TODO: JSON verwerken
+            result = new String(bytes);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
-
 
         return result;
     }

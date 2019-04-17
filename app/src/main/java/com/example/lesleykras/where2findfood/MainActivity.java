@@ -32,18 +32,22 @@ public class MainActivity extends AppCompatActivity {
         status = (TextView) findViewById(R.id.statusTextView);
         counter = 0;
 
-        //Some url endpoint that you may have
-        String myUrl = "http://swapi.co/api/planets/1";
-        //String to place our result in
+        //Url endpoint
+        String myUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=51.876689,4.466792&radius=100&type=restaurant&key=";
+
+        // Save found locations from API call
+        // TODO: Omzetten naar json ArrayList
         result = null;
-        //Instantiate new instance of our class
+
+        //make a new http request
         HttpGetRequest httpGetRequest = new HttpGetRequest();
-        //Perform the doInBackground method, passing in our url
+
         try {
             result = httpGetRequest.execute(myUrl).get();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+
 
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
@@ -52,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                 status.setText("Button is tapped " + counter + " times!");
                 Log.d("=-LOG-=", "klik");
 
-                while(result != null){
+                if(result != null){
                     Log.d("=-LOG-=", result);
                 }
             }
@@ -60,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
 
         searchButton.setOnClickListener(onClickListener);
     }
-
 
 
     @Override
