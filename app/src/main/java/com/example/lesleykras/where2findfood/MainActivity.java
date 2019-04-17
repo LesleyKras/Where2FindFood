@@ -1,5 +1,7 @@
 package com.example.lesleykras.where2findfood;
 
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -8,17 +10,28 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private Button searchButton;
-    private TextView status;
-    private int counter;
+    private MapView mapView;
+    private GoogleMap gmap;
+    private String API_KEY;
+    private String ApiUrl = "";
+
+
     private String result;
+    private final static String L_TAG = "-=LOG=-";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,11 +42,30 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         searchButton = (Button) findViewById(R.id.search);
-        status = (TextView) findViewById(R.id.statusTextView);
-        counter = 0;
 
-        //Url endpoint
-        String myUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=51.876689,4.466792&radius=100&type=restaurant&key=";
+        //Get API_Key in a safe way from manifest
+        try {
+            ApplicationInfo ai = getPackageManager().getApplicationInfo(this.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = ai.metaData;
+            API_KEY = bundle.getString("com.google.android.geo.API_KEY");
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(L_TAG, "Failed to load meta-data, NameNotFound: " + e.getMessage());
+        } catch (NullPointerException e) {
+            Log.e(L_TAG, "Failed to load meta-data, NullPointer: " + e.getMessage());
+        }
+
+        //Url bouwen
+        buildAPIUrl();
+
+        mapView = findViewById(R.id.mapView);
+
+        Bundle mapViewBundle = null;
+        if (savedInstanceState != null) {
+            mapViewBundle = savedInstanceState.getBundle(API_KEY);
+        }
+
+        mapView.onCreate(mapViewBundle);
+        mapView.getMapAsync(this);
 
         // Save found locations from API call
         // TODO: Omzetten naar json ArrayList
@@ -43,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         HttpGetRequest httpGetRequest = new HttpGetRequest();
 
         try {
-            result = httpGetRequest.execute(myUrl).get();
+            result = httpGetRequest.execute(this.ApiUrl).get();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
@@ -52,12 +84,10 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                counter += 1;
-                status.setText("Button is tapped " + counter + " times!");
-                Log.d("=-LOG-=", "klik");
+                Log.d(L_TAG, "klik");
 
                 if(result != null){
-                    Log.d("=-LOG-=", result);
+                    Log.d(L_TAG, result);
                 }
             }
         };
@@ -88,5 +118,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        gmap = googleMap;
+        gmap.setMinZoomPreference(12);
+        LatLng latLong = new LatLng(51.876689, 4.466792);
+        gmap.addMarker(new MarkerOptions().position(latLong).title("Marker in Pendrecht"));
+        gmap.moveCamera(CameraUpdateFactory.newLatLng(latLong));
+        Log.d(L_TAG, "Map initialised");
+    }
+
+    private void buildAPIUrl(){
+        this.ApiUrl="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=51.876689,4.466792&radius=100&type=restaurant&key="+API_KEY;
     }
 }

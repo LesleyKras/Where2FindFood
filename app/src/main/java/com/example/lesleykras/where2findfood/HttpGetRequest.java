@@ -48,6 +48,10 @@ public class HttpGetRequest extends AsyncTask <String, Void, String>{
                 // TODO: Foutafhandeling
                 Log.d("=-LOG-=", "No data received");
             }
+
+            // Close connections
+            inputStream.close();
+
             // TODO: JSON verwerken
             result = new String(bytes);
         }
