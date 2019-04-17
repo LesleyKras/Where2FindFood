@@ -24,11 +24,12 @@ import java.util.concurrent.ExecutionException;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private Button searchButton;
+    private Button listViewButton;
     private MapView mapView;
     private GoogleMap gmap;
     private String API_KEY;
     private String ApiUrl = "";
-
+    private LatLng latLong = new LatLng(51.876689, 4.466792);
 
     private String result;
     private final static String L_TAG = "-=LOG=-";
@@ -42,6 +43,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setSupportActionBar(toolbar);
 
         searchButton = (Button) findViewById(R.id.search);
+        listViewButton = (Button) findViewById(R.id.listView);
+        listViewButton.setEnabled(false);
 
         //Get API_Key in a safe way from manifest
         try {
@@ -81,18 +84,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
 
-        View.OnClickListener onClickListener = new View.OnClickListener() {
+        View.OnClickListener getApiResults = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(L_TAG, "klik");
+                Log.d(L_TAG, "klik op get Food");
 
                 if(result != null){
                     Log.d(L_TAG, result);
                 }
+                gmap.addMarker(new MarkerOptions().position(latLong).title("Your position"));
+                gmap.moveCamera(CameraUpdateFactory.newLatLng(latLong));
+                listViewButton.setEnabled(true);
+
             }
         };
 
-        searchButton.setOnClickListener(onClickListener);
+        View.OnClickListener goToListView = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(L_TAG, "klik op ListView");
+            }
+        };
+
+        searchButton.setOnClickListener(getApiResults);
+        listViewButton.setOnClickListener(goToListView);
     }
 
 
@@ -124,10 +139,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         gmap = googleMap;
         gmap.setMinZoomPreference(12);
-        LatLng latLong = new LatLng(51.876689, 4.466792);
-        gmap.addMarker(new MarkerOptions().position(latLong).title("Marker in Pendrecht"));
-        gmap.moveCamera(CameraUpdateFactory.newLatLng(latLong));
+
         Log.d(L_TAG, "Map initialised");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mapView.onStop();
+    }
+    @Override
+    protected void onPause() {
+        mapView.onPause();
+        super.onPause();
+    }
+    @Override
+    protected void onDestroy() {
+        mapView.onDestroy();
+        super.onDestroy();
+    }
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mapView.onLowMemory();
     }
 
     private void buildAPIUrl(){
