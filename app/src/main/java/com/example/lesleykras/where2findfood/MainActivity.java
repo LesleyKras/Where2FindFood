@@ -19,6 +19,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -32,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng latLong = new LatLng(51.876689, 4.466792);
 
     private String result;
+    private JSONObject jsonResult;
+
     private final static String L_TAG = "-=LOG=-";
 
     @Override
@@ -67,12 +72,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapViewBundle = savedInstanceState.getBundle(API_KEY);
         }
 
+        //Map initialiseren
         mapView.onCreate(mapViewBundle);
         mapView.getMapAsync(this);
 
-        // Save found locations from API call
-        // TODO: Omzetten naar json ArrayList
-        result = null;
 
         //make a new http request
         HttpGetRequest httpGetRequest = new HttpGetRequest();
@@ -83,6 +86,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             e.printStackTrace();
         }
 
+        try {
+            jsonResult = new JSONObject(result);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
         View.OnClickListener getApiResults = new View.OnClickListener() {
             @Override
@@ -90,11 +99,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.d(L_TAG, "klik op get Food");
 
                 if(result != null){
-                    Log.d(L_TAG, result);
+                    try {
+                        Log.d(L_TAG, jsonResult.getJSONArray("results").getJSONObject(0).toString(10));
+                    } catch (Exception e) {
+                        Log.d(L_TAG, "Error; Geen data ontvangen");
+                    }
                 }
+
+//              LatLng markerLocation = new LatLng(jsonResult.getDouble("lat"),jsonResult.getDouble("long"));
+
+
                 gmap.addMarker(new MarkerOptions().position(latLong).title("Your position"));
                 gmap.moveCamera(CameraUpdateFactory.newLatLng(latLong));
                 listViewButton.setEnabled(true);
+
+                try {
+                    Log.d(L_TAG + "JsonObject: ", ":  :" + jsonResult.getJSONArray("results").get(0).toString());
+                } catch (JSONException e) {
+                    Log.d(L_TAG, "Error: " + e);
+                }
 
             }
         };
